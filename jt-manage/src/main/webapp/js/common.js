@@ -52,7 +52,27 @@ var TT = KindEditorUtil = {		//相当于java中定义的工具类，里面提供
         	return '未知';
         }
     },
-    
+
+    // 商品分类id转名称
+    formatItemCat : function(val,row){
+        var result = "";		//接收返回值
+        //jQuery提供$.get、$.post、$.ajax三种方式
+        $.ajax({
+            type: "POST",
+            url: "/item/cat/"+val,
+            contentType: "application/json;charset=utf-8",
+            dataType: "json",
+            async: false,	//同步，必须设置为同步，异步无法获取返回值
+            success: function (data) {
+                result = data.name+"("+val+")";
+            }, failure: function () {
+                result = "";
+            }
+        })
+        return result;
+    },
+
+
     init : function(data){
     	this.initPicUpload(data);
     	this.initItemCat(data);

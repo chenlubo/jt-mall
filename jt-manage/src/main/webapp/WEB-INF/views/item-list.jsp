@@ -6,7 +6,7 @@
         	<th data-options="field:'ck',checkbox:true"></th>
         	<th data-options="field:'id',width:60">商品ID</th>
             <th data-options="field:'title',width:200">商品标题</th>
-            <th data-options="field:'cid',width:100">叶子类目</th>
+            <th data-options="field:'cid',width:100,formatter:KindEditorUtil.formatItemCat">叶子类目</th>
             <th data-options="field:'sellPoint',width:100">卖点</th>
             <th data-options="field:'price',width:70,align:'right',formatter:KindEditorUtil.formatPrice">价格</th>
             <th data-options="field:'num',width:70,align:'right'">库存数量</th>
