@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,7 @@ import com.jt.manage.mapper.ItemDescMapper;
 import com.jt.manage.mapper.ItemMapper;
 import com.jt.manage.pojo.Item;
 import com.jt.manage.pojo.ItemDesc;
+import redis.clients.jedis.JedisCluster;
 
 @Service
 public class ItemService extends BaseService<Item>{
@@ -29,8 +32,15 @@ public class ItemService extends BaseService<Item>{
 	private ItemMapper itemMapper;
 	@Autowired
 	private ItemDescMapper itemDescMapper;
-	
-	//查询商品列表，按修改时间倒叙
+    @Autowired
+    public JedisCluster jedisCluster;
+
+    public String ITEM_KEY = "ITEM_";
+    public String ITEM_DESC_KEY = "ITEM_DESC_";
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+
+    //查询商品列表，按修改时间倒叙
 	public EasyUIResult queryItemList(Integer pageNum, Integer pageSize){
 		//标识分页开始， mybatis规则：拦截器只拦截下面第一条查询的SQL语句
 		PageHelper.startPage(pageNum, pageSize);	
@@ -91,7 +101,61 @@ public class ItemService extends BaseService<Item>{
 	
 	//根据ItemId获取ItemDesc对象，把外键当做主键
 	public ItemDesc getItemDescByItemId(Long itemId){
-		return itemDescMapper.selectByPrimaryKey(itemId);
+        //增加缓存
+        try{
+            String jsonData = jedisCluster.get(ITEM_DESC_KEY+itemId);
+            if(StringUtils.isNotEmpty(jsonData)){
+                ItemDesc desc = MAPPER.readValue(jsonData, ItemDesc.class);
+                return desc;
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+                   }
+
+        ItemDesc desc = itemDescMapper.selectByPrimaryKey(itemId);
+
+        //写缓存
+        try{
+            String jsonData = MAPPER.writeValueAsString(desc);
+            jedisCluster.set(ITEM_DESC_KEY+itemId, jsonData);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return desc;
+
+
 	}
-	
+
+    public Item getItemById(Long itemId) throws Exception{
+        //增加缓存
+        try{
+            String jsonData = jedisCluster.get(ITEM_KEY+itemId);
+            if(StringUtils.isNotEmpty(jsonData)){
+                Item item = MAPPER.readValue(jsonData, Item.class);
+                return item;
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+//        //通过httpClient发起http请求，请求后台
+//        String url = "http://manage.jt.com/web/item/"+itemId;
+//        //注意有超时的问题，
+//        String jsonData = httpClientService.doGet(url, "utf-8");
+//        //把json串转成单个pojo对象
+//        Item item = MAPPER.readValue(jsonData, Item.class);
+        Item item = itemMapper.selectByPrimaryKey(itemId);
+
+        //写缓存
+//        try{
+//            jedisCluster.set(ITEM_KEY+itemId, jsonData);
+//        }catch(Exception e){
+//            e.printStackTrace();
+//        }
+
+        return item;
+    }
+
+
 }
