@@ -136,12 +136,9 @@
 						<div class="wrap-input">
 								<a class="btn-reduce" href="javascript:;" onclick="setAmount.reduce('#buy-num')">减少数量</a>
 								<a class="btn-add" href="javascript:;" onclick="setAmount.add('#buy-num')">增加数量</a>
-<form id="cartForm" method="post">
-<input type="hidden" name="itemTitle" value="${item.title }"/>
-<input type="hidden" name="itemImage" value="${item.images[0] }"/>
-<input type="hidden" name="itemPrice" value="${item.price }"/>
-<input class="text" id="buy-num" name="num" value="1" onkeyup="setAmount.modify('#buy-num');"/>
-</form>
+								<form id="cartForm" method="post">
+								<input class="text" id="buy-num" name="num" value="1" onkeyup="setAmount.modify('#buy-num');"/>
+								</form>
 						</div>
 					</div>
 				</li>
