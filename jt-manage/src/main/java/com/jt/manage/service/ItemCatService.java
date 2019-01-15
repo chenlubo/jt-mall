@@ -31,52 +31,55 @@ public class ItemCatService extends BaseService<ItemCat>{
 
     //查询商品分类为前台实现，3级分类菜单结构
     public ItemCatResult getItemCatList(){
-        ItemCatResult result = new ItemCatResult();	//声明存储的对象
-        List<ItemCat> cats = super.queryAll();		//查询所有3级菜单
+        ItemCat params = new ItemCat();	//where条件传递
+        params.setStatus(1);		//1正常2删除
+        List<ItemCat> itemCatList = super.queryListByWhere(params);
 
-        //获取当前菜单下的所有的子菜单，形成一个数组
+        //获取每个节点下的所有的子节点	<Long,List<ItemCat>> id，当前节点下的所有数据
         Map<Long,List<ItemCat>> map = new HashMap<Long,List<ItemCat>>();
-        for(ItemCat itemCat: cats){
-            if(!map.containsKey(itemCat.getParentId())){
-                //创建一个元素，元素内容
-                map.put(itemCat.getParentId(), new ArrayList<ItemCat>());
+        for(ItemCat cat : itemCatList){
+            //map中还为构建这个节点
+            if(!map.containsKey(cat.getParentId())){
+                //当这个节点还不存在时，创建空的ArrayList
+                map.put(cat.getParentId(), new ArrayList<ItemCat>());
             }
-            map.get(itemCat.getParentId()).add(itemCat);
+            map.get(cat.getParentId()).add(cat);
         }
 
-        //构建3级菜单结构
-        List<ItemCatData> list1 = new ArrayList<ItemCatData>();
-        //为一级菜单构建它的所有子菜单
-        for(ItemCat itemCat1 : map.get(0L)){		//遍历一级菜单
-            ItemCatData data1 = new ItemCatData();
-            data1.setUrl("/products/"+itemCat1.getId()+".html");
-            data1.setName("<a href='/products/"+itemCat1.getId()+".html'>"+itemCat1.getName()+"</a>");
+        //组织ItemCatResult的结构
+        ItemCatResult result = new ItemCatResult();
+        //遍历一级菜单
+        for(ItemCat cat1 : map.get(0L)){
+            ItemCatData d1 = new ItemCatData();	//一级菜单
+            String url = "/products/" + cat1.getId() + ".html";
+            d1.setUrl(url);
+            d1.setName("<a href=\""+url+"\">" + cat1.getName() + "</a>");
 
+            List<ItemCatData> list1 = new ArrayList<ItemCatData>();
             //遍历二级菜单
-            List<ItemCatData> list2 = new ArrayList<ItemCatData>();
-            for(ItemCat itemCat2: map.get(itemCat1.getId())){
-                ItemCatData data2 = new ItemCatData();
-                data2.setUrl("/products/"+itemCat2.getId()+".html");
-                data2.setName(itemCat2.getName());
+            for(ItemCat cat2 : map.get(cat1.getId())){
+                ItemCatData d2 = new ItemCatData();	//二级菜单
+                d2.setUrl("/products/"+ cat2.getId() + ".html");
+                d2.setName(cat2.getName());
 
+                List<String> list2 = new ArrayList<String>();
                 //遍历三级菜单
-                //三级菜单只是一个字符串，和一级、二级结构不同
-                List<String> list3 = new ArrayList<String>();
-                for(ItemCat itemCat3 : map.get(itemCat2.getId())){
-                    list3.add("/products/"+itemCat3.getId()+".html|"+itemCat3.getName());
+                for(ItemCat cat3 : map.get(cat2.getId())){
+                    list2.add("/products/"+cat3.getId()+".html|"+cat3.getName());
                 }
-                data2.setItems(list3);
-                list2.add(data2);
-            }
-            data1.setItems(list2);
-            list1.add(data1);
+                d2.setItems(list2);
 
-            //首页菜单要求只返回14条
-            if(list1.size()>14){
-                break;
+                list1.add(d2);
             }
+
+            d1.setItems(list1);
+
+            if(result.getItemCats().size()>14){
+                break;	//如果一级菜单超过14个就退出
+            }
+            //遍历完一条一级菜单，就把它放入list集合
+            result.getItemCats().add(d1);
         }
-        result.setItemCats(list1);
         return result;
     }
 
