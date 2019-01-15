@@ -9,15 +9,13 @@ import com.jt.common.service.HttpClientService;
 import com.jt.common.service.RedisService;
 import com.jt.web.pojo.Item;
 import com.jt.web.pojo.ItemDesc;
-import redis.clients.jedis.JedisCluster;
 
 @Service
 public class ItemService {
 	@Autowired
 	private HttpClientService httpClientService;
 	@Autowired
-	public JedisCluster jedisCluster;
-
+	private RedisService redisService;
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	
 	//发起请求访问后台系统
@@ -25,14 +23,14 @@ public class ItemService {
 		try{
 			//增加商品的缓存
 			String ITEM_KEY = "ITEM_"+itemId;
-			String jsonData = jedisCluster.get(ITEM_KEY);
+			String jsonData = redisService.get(ITEM_KEY);
 			if(StringUtils.isEmpty(jsonData)){
 				//发起httpClient请求
 				String url = "http://manage.jt.com/web/item/" + itemId;
 				jsonData = httpClientService.doGet(url);
 				
 				//写缓存
-                jedisCluster.set(ITEM_KEY, jsonData);
+				redisService.set(ITEM_KEY, jsonData);
 			}
 						
 			Item item = MAPPER.readValue(jsonData, Item.class);

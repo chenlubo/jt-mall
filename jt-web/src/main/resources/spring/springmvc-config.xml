@@ -40,6 +40,17 @@
         </mvc:message-converters>
     </mvc:annotation-driven>
 
+    <!-- 配置拦截器链，顺序执行，只要一个执行符合條件，直接就退出 -->
+    <mvc:interceptors>
+        <!-- 处理购物车 -->
+        <mvc:interceptor>
+            <!-- 拦截所有的请求，拦截处理 -->
+            <mvc:mapping path="/cart/**"/>
+            <bean class="com.jt.web.interceptor.CartInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+
 
 
 

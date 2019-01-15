@@ -29,7 +29,7 @@ public class UserService{
 		params.put("email", user.getEmail());
 		
 		//jsonData代表SysResult，不行，SysResult写不标准，ObjectMapper不能转回SysResult
-		String jsonData = httpClientService.doPost(url , params);
+		String jsonData = httpClientService.doPost(url, params);
 		JsonNode jsonNode = MAPPER.readTree(jsonData);
 		String username = jsonNode.get("data").asText();	//从SysResult对象中只获取data属性值
 		return username;
