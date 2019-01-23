@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt.order.mapper.OrderMapper">
+	<!-- 按订单号查询订单（物流，商品） autoMapping会自动驼峰规则映射 -->
+	<resultMap type="Order" id="orderRM" autoMapping="true">
+		<id property="orderId" column="order_id"/>
+		
+		<!-- 订单和物流一对一，必须放在前面 -->
+		<association property="orderShipping" select="orderShippingByOrderId" javaType="OrderShipping" column="order_id">
+			<id property="orderId" column="order_id"/>
+		</association>
+		
+		<!-- 订单和商品，一对多 -->
+		<collection property="orderItems" select="orderItemByOrderId" javaType="ArrayList" ofType="OrderItem" column="order_id">
+			<id property="itemId" column="item_id"/>
+			<id property="orderId" column="order_id"/>
+		</collection>
+	</resultMap>
+	
+	<!-- 按订单id查询 -->
+	<select id="queryById" parameterType="string" resultMap="orderRM">
+SELECT * FROM tb_order WHERE order_id = #{orderId}
+	</select>
+	
+	<!-- 某个订单对应物流信息 -->
+	<select id="orderShippingByOrderId" parameterType="string" resultType="OrderShipping">
+SELECT * FROM tb_order_shipping WHERE order_id = #{orderId}
+	</select>
+	
+	<!-- 某个订单对应商品信息 -->
+	<select id="orderItemByOrderId" parameterType="string" resultType="OrderItem">
+SELECT * FROM tb_order_item WHERE order_id = #{orderId}
+	</select>
+	
+	<!-- 创建订单 -->
+	<select id="create" parameterType="Order">
+insert into tb_order (order_id,payment,payment_type,post_fee,status,payment_time,consign_time,end_time,close_time,shipping_name,shipping_code,user_id,buyer_message,buyer_nick,buyer_rate,created,updated)
+ values(#{orderId},#{payment},#{paymentType},#{postFee},1,#{paymentTime},#{consignTime},#{endTime},#{closeTime},#{shippingName},#{shippingCode},#{userId},#{buyerMessage},#{buyerNick},#{buyerRate},now(),now())
+;
+
+insert into tb_order_shipping (order_id,receiver_name,receiver_phone,receiver_mobile,receiver_state,receiver_city,receiver_district,receiver_address,receiver_zip,created,updated)
+ values(#{orderId},#{orderShipping.receiverName},#{orderShipping.receiverPhone},#{orderShipping.receiverMobile},#{orderShipping.receiverState},#{orderShipping.receiverCity},#{orderShipping.receiverDistrict},#{orderShipping.receiverAddress},#{orderShipping.receiverZip},now(),now())
+;
+
+insert into tb_order_item (order_id,item_id,num,title,price,total_fee,pic_path)
+ values
+ <foreach collection="orderItems" item="item" separator=",">
+ (#{orderId},#{item.itemId},#{item.num},#{item.title},#{item.price},#{item.totalFee},#{item.picPath})
+ </foreach>
+;
+	</select>
+	
+	
+	<!-- 处理未支付订单，2天还没有支付，就修改去状态 -->
+	<update id="paymentOrderScan" parameterType="date">
+UPDATE tb_order SET STATUS=6,end_time=NOW(),close_time=NOW() 
+WHERE payment_type=1 AND STATUS=1 AND created &lt; #{date}	
+	</update>
+</mapper>
