@@ -13,6 +13,7 @@ public class RedisService {
     @Autowired(required = false)
     private ShardedJedisPool shardedJedisPool;
 
+    //两个方法有很多重复代码，如何消除呢？类似js中的回调来解决。目的简化代码，抽取公用逻辑。牛，传递算法！
     private <T> T execute(Function<ShardedJedis, T> function) {
         ShardedJedis shardedJedis = null;
         try {
@@ -37,9 +38,10 @@ public class RedisService {
      * @param value
      * @return
      */
+    
     public String set(final String key, final String value) {
         return this.execute(new Function<ShardedJedis, String>() {
-            @Override
+
             public String execute(ShardedJedis shardedJedis) {
                 return shardedJedis.set(key, value);
             }
@@ -57,7 +59,7 @@ public class RedisService {
      */
     public String set(final String key, final String value, final Integer seconds) {
         return this.execute(new Function<ShardedJedis, String>() {
-            @Override
+
             public String execute(ShardedJedis shardedJedis) {
                 String result = shardedJedis.set(key, value);
                 shardedJedis.expire(key, seconds);//设置生存时间
@@ -75,7 +77,7 @@ public class RedisService {
      */
     public String get(final String key) {
         return this.execute(new Function<ShardedJedis, String>() {
-            @Override
+
             public String execute(ShardedJedis shardedJedis) {
                 return shardedJedis.get(key);
             }
@@ -92,7 +94,7 @@ public class RedisService {
      */
     public Long expire(final String key, final Integer seconds) {
         return this.execute(new Function<ShardedJedis, Long>() {
-            @Override
+
             public Long execute(ShardedJedis shardedJedis) {
                 return shardedJedis.expire(key, seconds);
             }
@@ -108,7 +110,7 @@ public class RedisService {
      */
     public Long del(final String key) {
         return this.execute(new Function<ShardedJedis, Long>() {
-            @Override
+
             public Long execute(ShardedJedis shardedJedis) {
                 return shardedJedis.del(key);
             }

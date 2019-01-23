@@ -12,6 +12,6 @@ public class RabbitItemService {
 	
 	//消息就传递给方法的参数，自动转类型
 	public void updateItem(String itemKey){
-		redisService.del(itemKey);
+//		redisService.del(itemKey);
 	}
 }
