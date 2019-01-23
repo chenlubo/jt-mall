@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.jt.cart.mapper.CartMapper;
-import com.jt.cart.pojo.Cart;
 import com.jt.common.service.BaseService;
+import com.jt.dubbo.pojo.Cart;
 
 @Service
 public class CartService extends BaseService<Cart>{
@@ -48,5 +48,9 @@ public class CartService extends BaseService<Cart>{
 	//修改商品数量=页面的数量
 	public void updateNum(Cart cart){
 		cartMapper.updateNum(cart);
+	}
+	
+	public void deleteCart(Cart cart){
+		super.deleteByWhere(cart);
 	}
 }
